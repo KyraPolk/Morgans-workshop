@@ -23,11 +23,36 @@ app.get("/api/anime", async(req, res, next) =>{
   }
 });
 
+//Third, if we want to be able to get item by id we need to create a route to "GET"
+app.get("/api/anime/:id", async (req, res, next) =>{
+  // console.log("hello") //shows up
+  try {
+    const SQL = `SELECT * FROM anime WHERE id=$1`
+    const response = await client.query(SQL, [req.params.id])
 
+    //for error when id does not exist
+    if(!response.rows.length){
+      next({
+        title: "missing title error",
+        message: `anime with id ${req.params.id} does not exist`
+      })
+    }
+
+    res.send(response.rows);
+  } catch (error){
+    next(error)
+  }
+
+})
+//ERROR HANDLER
+app.use((error, req,res,next) =>{
+  res.status(500)
+  res.send(error)
+})
 //Second, need to have express server listen to a port
 const start = async() =>{
   await client.connect()
-  //SQL
+  //SQL route
   const SQL = `
   DROP TABLE IF EXISTS anime;
   CREATE TABLE anime(
